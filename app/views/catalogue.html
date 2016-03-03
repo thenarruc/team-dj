@@ -1,0 +1,25 @@
+<h2>Catalogue</h2>
+
+<ul id="catalogue" class="media-list" ng-show="catalogueItems.length">
+	<li ng-repeat=	"track in catalogueItems" class="media">
+		{{ytid=track.$value;""}}
+		<div class="media-left media-middle">
+			<img ng-src="http://i1.ytimg.com/vi/{{ytid}}/mqdefault.jpg" height='100'/>
+		</div>
+		<div class="media-body">
+			<h4 class="media-heading">{{catalogue[ytid].title}}</h4>
+			<p>{{catalogue[ytid].summary}}</p>
+		</div>
+		<div class="media-right media-middle">
+			<span ng-click="addToPlaylist(ytid);" class="glyphicon glyphicon-plus"></span>
+		</div>
+	</li>
+</ul>
+
+<div class="alert alert-info" ng-hide="catalogueItems.length">There is nothing in this catalogue</div>
+
+
+<form>
+  <input ng-model="newCatalogueName">
+  <button type="submit" ng-click="changeCatalogueName();">change catalogue</button>
+</form>

@@ -1,0 +1,7 @@
+angular.module('firebase.config', [])
+  .constant('FBURL', 'XXXXX.firebaseio.com')
+  .constant('SIMPLE_LOGIN_PROVIDERS', ['password','anonymous','facebook','google'])
+
+  .constant('YOUTUBE_API_KEY', 'AIzaSyAiF1HUjskqrmVVgearpePnUhBMFhjDHmc')
+
+  .constant('loginRedirectPath', '/login');

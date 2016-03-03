@@ -1,0 +1,45 @@
+<!-- <div ng-controller="ChatCtrl">
+    <div ng-view="ChatCtrl"></div>
+</div> -->
+
+<h2>Playlist</h2>
+
+<md-autocomplete
+		md-selected-item="selectedItem"
+		md-search-text-change="searchTextChange(searchText)"
+		md-search-text="searchText"
+		md-selected-item-change="selectedItemChange(item)"
+		md-items="item in querySearch(searchText)"
+		md-item-text="item.title"
+		md-min-length="0"
+		placeholder="Search YouTube"
+		md-menu-class="autocomplete-custom-template">
+	<md-item-template>
+		<div class="media">
+			<div class="media-left">
+				<img ng-src="http://i1.ytimg.com/vi/{{item.ytid}}/mqdefault.jpg" height='50'/>
+			</div>
+			<div class="media-body">
+				<h4> {{item.title}} </h4>
+				<!-- <p> {{item.summary}} </p> -->
+			</div>
+		</div>
+	</md-item-template>
+</md-autocomplete>
+
+<ul id="playlist" class="media-list" ng-show="playlist.length">
+	<li ng-repeat="track in playlist" class="media">
+		<div class="media-left media-middle">
+			<img ng-src="http://i1.ytimg.com/vi/{{track.ytid}}/mqdefault.jpg" height='100'/>
+		</div>
+		<div class="media-body">
+			<h4 class="media-heading">{{track.title}}</h4>
+			<p>{{track.summary}}</p>
+		</div>
+		<div class="media-right media-middle">
+			<span ng-click="removeTrack(track.ytid);" class="glyphicon glyphicon-remove"></span>
+		</div>
+	</li>
+</ul>
+
+<div class="alert alert-info" ng-hide="playlist.length">There is nothing in the playlist</div>
