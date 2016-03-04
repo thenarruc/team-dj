@@ -120,6 +120,9 @@ angular.module('teamDjApp')
           height: player.height,
           width: player.width,
           videoId: player.videoId,
+          playerVars: {
+            'iv_load_policy': 3
+          },
           events: {
             'onReady': onYTReady,
             'onStateChange': onYTStateChange,
