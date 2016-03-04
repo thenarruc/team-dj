@@ -12,7 +12,7 @@ angular.module('teamDjApp')
     $scope.$root.activetab = 'playlist';
 
   	var $uid = Auth.$getAuth().uid;
-    $scope.votes = $firebaseObject(Ref.child('votes/' + $uid));
+    // $scope.votes = $firebaseObject(Ref.child($scope.catalogueName + '/votes/' + $uid));
 
 	$scope.querySearch = function() {
 		if($scope.searchText.length < 3) {
@@ -59,14 +59,20 @@ angular.module('teamDjApp')
 
 	function addToCatalogue(item) {
 		var track = $firebaseObject(Ref.child($scope.catalogueName + '/catalogue/' + item.ytid));
-		if (!track) {
-			track.title = item.title;
-			track.summary = item.summary;
-			track.score = 0;
+		track.$loaded(function(){
+			if (!track.$value) {
+				track.title = item.title;
+				track.summary = item.summary;
+				track.score = 0;
 
-			track.$save();
-			$scope.catalogueItems.$add(item.ytid);
-		}
+				track.$save();
+				$scope.catalogueItems.$add(item.ytid);
+				$
+			} else {
+				console.log("Track exists", $scope.catalogueName + '/catalogue/' + item.ytid);
+			}
+		});
+
 	}
 
 	function addToPlaylist(item) {
@@ -85,16 +91,27 @@ angular.module('teamDjApp')
 		}
 	}
 
-	function castVote(ytid, vote) {
-		var oldVote = $scope.votes[ytid];
-		if(vote === oldVote) {
-			return; // no change
-		}
+	function castVote(ytid, newVote) {
+		var vote = $firebaseObject(Ref.child($scope.catalogueName + '/votes/' + $uid + "/" + ytid));
 
-		// difference is the change in score for the track
-		var difference = vote - oldVote;
-		$scope.votes[ytid] = vote;
-		$scope.catalogue[ytid].score += difference;
+		vote.$loaded(function(){
+			var diff = 0;
+			if(!vote.$value) {
+				diff = newVote;
+			} else {
+				diff = newVote - vote.$value;
+			}
+			vote.$value = newVote;
+			vote.$save();
+			if(diff !== 0) {
+				var track = $firebaseObject(Ref.child($scope.catalogueName + '/catalogue/'+ ytid));
+				track.$loaded(function(){
+					console.log("Current Score", track.score);
+					track.score += diff;
+					track.$save();
+				});
+			}
+		});
 	}
 
   });
