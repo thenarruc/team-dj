@@ -187,12 +187,14 @@ angular.module('teamDjApp')
         console.log('No video player');
         return;
       }
-      $rootScope.status.ytid = player.player.getVideoData()[VIDEO_ID];
-      $rootScope.status.currentTime = player.player.getCurrentTime();
-      $rootScope.status.timestamp = Firebase.ServerValue.TIMESTAMP;
-      $rootScope.status.$save();
-      console.log('Set Status', $rootScope.status);
-      ping();
+      if($rootScope.status.controller === $rootScope.controlkey) {
+        $rootScope.status.ytid = player.player.getVideoData()[VIDEO_ID];
+        $rootScope.status.currentTime = player.player.getCurrentTime();
+        $rootScope.status.timestamp = Firebase.ServerValue.TIMESTAMP;
+        $rootScope.status.$save();
+        console.log('Set Status', $rootScope.status);
+        ping();
+      }
     }
 
     function ping() {
