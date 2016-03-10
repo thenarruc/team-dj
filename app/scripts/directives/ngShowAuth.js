@@ -7,7 +7,7 @@
  * to be initialized so there is no initial flashing of incorrect state.
  */
 angular.module('teamDjApp')
-  .directive('ngShowAuth', ['Auth', '$timeout', function (Auth, $timeout) {
+  .directive('ngShowAuth', ['Auth', '$timeout', 'DEV', function (Auth, $timeout, DEV) {
     'use strict';
 
     return {
@@ -20,6 +20,9 @@ angular.module('teamDjApp')
           // this one always runs last for reliability
           $timeout(function () {
             el.toggleClass('ng-cloak', !Auth.$getAuth());
+            if(DEV) {
+              el.toggleClass('ng-cloak', false);
+            }
           }, 0);
         }
 

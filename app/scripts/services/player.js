@@ -8,7 +8,7 @@
  * Service in the teamDjApp.
  */
 angular.module('teamDjApp')
-  .service('player', function ($rootScope, $window, $firebaseArray, $firebaseObject, Ref, Firebase, $timeout, $cookies) {
+  .service('player', function ($rootScope, $window, $firebaseArray, $firebaseObject, Ref, Firebase, $timeout, $cookies, Auth, DEV) {
 
     var player = $rootScope.$new(true);
     player.youTubeReady = false;
@@ -19,6 +19,7 @@ angular.module('teamDjApp')
     player.height = '390';
     player.width = '640';
 
+    $rootScope.hasControl = false;
 
     // 3. This function creates an <iframe> (and YouTube player)
     //    after the API code downloads.
@@ -28,7 +29,7 @@ angular.module('teamDjApp')
     };
 
     player.setCatalogue = function(catalogueName) {
-      if(typeof catalogueName === 'undefined') {
+      if(!catalogueName || typeof catalogueName === 'undefined') {
         catalogueName = '';
       }
       catalogueName = catalogueName
@@ -51,7 +52,20 @@ angular.module('teamDjApp')
       return catalogueName;
     };
 
-    player.setCatalogue($rootScope.catalogueName);
+    Auth.$onAuth(function(authData){
+      if(authData) {
+        player.setCatalogue($rootScope.catalogueName);
+      } else {
+        $rootScope.playlist = null;
+        $rootScope.catalogueItems = null;
+        $rootScope.status = null;
+      }
+    });
+    if(DEV) {
+      $window.Firebase.goOffline();
+      $rootScope.status.state = 'playing';
+
+    }
 
     player.loadPlayer = function() {
       console.log('Load Player',
@@ -68,15 +82,13 @@ angular.module('teamDjApp')
     };
 
     function negotiateControl(onSuccess, onFail) {
-
-
       $rootScope.status.$loaded(function(){
         var currentTime = new Date().getTime();
         var takeoverTime = currentTime + 30000; // 30 seconds in the future
 
         console.log('negotiateControl', $rootScope.status.controller, $rootScope.controlkey, $rootScope.status.timestamp - takeoverTime);
 
-        if($rootScope.status.controller === $rootScope.controlkey) {
+        if(hasControl()) {
           console.log('I already have control');
           onSuccess();
           return;
@@ -114,14 +126,21 @@ angular.module('teamDjApp')
     function createPlayer() {
       console.log('create player', player.playerId, player.videoId);
       if(!player.videoId) {
-        $rootScope.playlist.$loaded(playNext);
+        $rootScope.status.$loaded(function(){
+          if($rootScope.status.ytid) {
+            player.videoId = $rootScope.status.ytid;
+            createPlayer();
+          }
+          // $rootScope.playlist.$loaded(playNext);
+        });
       } else {
         player.player = new $window.YT.Player(player.playerId, {
           height: player.height,
           width: player.width,
           videoId: player.videoId,
           playerVars: {
-            'iv_load_policy': 3
+            'iv_load_policy': 3,
+            'modestbranding': 1
           },
           events: {
             'onReady': onYTReady,
@@ -135,24 +154,19 @@ angular.module('teamDjApp')
     function onYTReady() {
       player.state = 'playing';
       player.player.getIframe().classList.add('ebmed-responsive-item');
-      player.player.playVideo();
+      if(player.videoId === $rootScope.status.ytid) {
+        // Video is already playing elsewhere
+        player.player.loadVideoById(player.videoId, $rootScope.status.currentTime);
+      } else {
+        player.player.playVideo();
+      }
     }
 
     function onYTStateChange(e) {
-      var statuses = ['ended', 'playing', 'paused', 'buffering', 'video cued'];
-      var statusText = e.data === -1 ? 'unstarted' : statuses[e.data];
-      console.log('onStateChange', statusText);
       negotiateControl(function(){
-        switch(e.data) {
-          case $window.YT.PlayerState.PLAYING:
-            $rootScope.status.state = 'playing';
-            break;
-          case $window.YT.PlayerState.ENDED:
-            $rootScope.status.state = 'loading';
-            break;
-          case $window.YT.PlayerState.PAUSED:
-            // relinquish control
-            $rootScope.status.controller = null;
+        if(e.data === $window.YT.PlayerState.PAUSED) {
+          // relinquish control
+          $rootScope.status.controller = null;
         }
         setStatus();
       });
@@ -181,28 +195,55 @@ angular.module('teamDjApp')
       }
     }
 
+    function hasControl() {
+      $rootScope.hasControl = $rootScope.status.controller === $rootScope.controlkey;
+      return $rootScope.hasControl;
+    }
+
     function setStatus() {
-      var VIDEO_ID = 'video_id';
       if(!player.player) {
         console.log('No video player');
         return;
       }
-      if($rootScope.status.controller === $rootScope.controlkey) {
-        $rootScope.status.ytid = player.player.getVideoData()[VIDEO_ID];
-        $rootScope.status.currentTime = player.player.getCurrentTime();
+      if(hasControl()) {
+        var STATUSES = ['ended', 'playing', 'paused', 'buffering', 'video cued'];
+        var VIDEO_ID = 'video_id', TITLE = 'title';
+        var state = player.player.getPlayerState();
+        var statusText = state === -1 ? 'unstarted' : STATUSES[state];
+        console.log('Setting state to', statusText);
+        $rootScope.status.state = statusText;
         $rootScope.status.timestamp = Firebase.ServerValue.TIMESTAMP;
+        var videoData = player.player.getVideoData();
+        $rootScope.status.ytid = videoData[VIDEO_ID];
+        $rootScope.status.title = videoData[TITLE];
+        $rootScope.status.currentTime = player.player.getCurrentTime();
+        $rootScope.status.duration = player.player.getDuration();
+        $rootScope.status.currentTimeStr = timeToString($rootScope.status.currentTime);
+        $rootScope.status.durationStr = timeToString($rootScope.status.duration);
+        if($rootScope.status.duration && $rootScope.status.duration > 0) {
+          $rootScope.status.progress = Math.ceil($rootScope.status.currentTime / $rootScope.status.duration * 100);
+        } else {
+          $rootScope.status.progress = 0;
+        }
+
         $rootScope.status.$save();
-        console.log('Set Status', $rootScope.status);
         ping();
       }
     }
 
     function ping() {
-      console.log('ping');
-      var hasControl = $rootScope.status.controller === $rootScope.controlkey;
-      if(hasControl) {
+      if(hasControl()) {
         $timeout(setStatus, 10000);
       }
+    }
+
+    function timeToString(time) {
+      var mins = Math.floor(time / 60);
+      var secs = Math.round(time - mins * 60);
+      if(secs < 10) {
+        secs = '0' + secs;
+      }
+      return mins + ':' + secs;
     }
 
     function playNext() {
@@ -242,7 +283,7 @@ angular.module('teamDjApp')
           player.player.loadVideoById(player.videoId, currentTime);
         } else {
           console.log('Create the player 2');
-          player.loadPlayer(player.videoId, currentTime);
+          player.loadPlayer();
         }
       });
     }

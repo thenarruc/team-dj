@@ -37,13 +37,17 @@ angular.module('teamDjApp')
  * dependency injection (see AccountCtrl), or rejects the promise if user is not logged in,
  * forcing a redirect to the /login page
  */
-  .config(['$routeProvider', 'SECURED_ROUTES', function($routeProvider, SECURED_ROUTES) {
+  .config(['$routeProvider', 'SECURED_ROUTES', 'DEV', function($routeProvider, SECURED_ROUTES, DEV) {
     // credits for this idea: https://groups.google.com/forum/#!msg/angular/dPr9BpIZID0/MgWVluo_Tg8J
     // unfortunately, a decorator cannot be use here because they are not applied until after
     // the .config calls resolve, so they can't be used during route configuration, so we have
     // to hack it directly onto the $routeProvider object
     $routeProvider.whenAuthenticated = function(path, route) {
       route.resolve = route.resolve || {};
+      if(DEV) {
+        $routeProvider.when(path, route);
+        return $routeProvider;
+      }
       route.resolve.user = ['Auth', function(Auth) {
         return Auth.$requireAuth();
       }];
@@ -85,6 +89,10 @@ angular.module('teamDjApp')
       .whenAuthenticated('/catalogue', {
         templateUrl: 'views/catalogue.html',
         controller: 'CatalogueCtrl'
+      })
+      .when('/about', {
+        templateUrl: 'views/about.html',
+        controller: 'AboutCtrl'
       })
       .otherwise({redirectTo: '/'});
   }])

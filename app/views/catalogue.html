@@ -1,22 +1,42 @@
 <h2>Catalogue</h2>
 
 <ul id="catalogue" class="media-list" ng-show="catalogueItems.length">
-	<li ng-repeat=	"track in catalogueItems" class="media">
-		{{ytid=track.$value;""}}
+	<li ng-repeat="track in catalogue" class="media">
 		<div class="media-left media-middle">
-			<img ng-src="http://i1.ytimg.com/vi/{{ytid}}/mqdefault.jpg" height='100'/>
+			<img ng-src="http://i1.ytimg.com/vi/{{track.ytid}}/mqdefault.jpg" height='100'/>
 		</div>
 		<div class="media-body">
-			<h4 class="media-heading">{{catalogue[ytid].title}}</h4>
-			<p>{{catalogue[ytid].summary}}</p>
+			<h4 class="media-heading">{{track.title}}</h4>
+			<p>{{track.summary}}</p>
+			{{vote=getVote(track.ytid);""}}
+			<div>
+				<button type="button" class="btn {{vote===1?'btn-primary':'btn-default'}}"
+						aria-label="tune" ng-click="tune(track.ytid);">
+					<span class="glyphicon glyphicon-thumbs-up" aria-hidden="true"></span>
+					Tune!
+				</button>
+				<button type="button" class="btn {{vote===-1?'btn-primary':'btn-default'}}"
+						aria-label="shame" ng-click="shame(track.ytid);">
+					<span class="glyphicon glyphicon-thumbs-down" aria-hidden="true"></span>
+					Shame!
+				</button>
+				<button type="button" class="btn btn-default" ng-disabled="isInPlaylist(track.ytid);"
+						aria-label="add to playlist" ng-click="addToPlaylist(track);">
+					<span class="glyphicon glyphicon-play" aria-hidden="true"></span>
+					Add to playlist
+				</button>
+			</div>
 		</div>
 		<div class="media-right media-middle">
 			<span ng-click="addToPlaylist(ytid);" class="glyphicon glyphicon-plus"></span>
+			<div class="well well-sm">SCORE: {{getScore(track.ytid, track)}}</div>
+			<!-- <span ng-click="removeFromCatalogue(ytid);" class="glyphicon glyphicon-remove"></span> -->
 		</div>
 	</li>
 </ul>
 
 <div class="alert alert-info" ng-hide="catalogueItems.length">There is nothing in this catalogue</div>
+
 
 
 <form>

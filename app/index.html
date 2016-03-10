@@ -33,8 +33,13 @@
 							<span class="icon-bar"></span>
 						</button>
 
-						<a class="navbar-brand" href="#/">Team DJ</a>
-						<a class="navbar-text" ng-show-auth="" href="#/catalogue">{{catalogueName}}</a>
+						<a class="navbar-brand" href="#/">
+							Team DJ
+							<div style="font-size:12px;position:absolute;bottom:0;color:#AAA;">
+								{{catalogueName}}
+								<span ng-show="{{hasControl}}" class="glyphicon glyphicon-flash"></span>
+							</div>
+						</a>
 					</div>
 
 					<div class="collapse navbar-collapse" id="js-navbar-collapse">
@@ -43,11 +48,13 @@
 							<li ng-class="{active: activetab == 'main'}"><a href="#/">Home</a></li>
 							<!-- //angularfire -->
 							<li ng-class="{active: activetab == 'playlist'}" ng-show-auth=""><a ng-href="#/playlist">playlist</a></li>
+							<li ng-class="{active: activetab == 'catalogue'}" ng-show-auth=""><a ng-href="#/catalogue">catalogue</a></li>
 							<li ng-class="{active: activetab == 'controls'}" ng-show-auth=""><a ng-href="#/controls">controls</a></li>
 							<li ng-class="{active: activetab == 'account'}">
 								<a ng-hide-auth="" href="#/login">log in</a>
 								<a ng-show-auth="" href="#/account">account</a>
 							</li>
+							<li ng-class="{active: activetab == 'about'}"><a ng-href="#/about">about</a></li>
 						</ul>
 					</div>
 				</div>
@@ -59,12 +66,24 @@
 		</div>
 
 		<div class="container">
+			{{status.state}} <b>{{status.title}}</b>
+			<div class="progress" style="position:relative;">
+				<div style="position:absolute;left:0;padding:0 5px;">{{status.currentTimeStr}}</div>
+				<div style="position:absolute;right:0;padding:0 5px;">{{status.durationStr}}</div>
+				<div class="progress-bar" role="progressbar"
+						aria-valuenow="{{status.progress}}" aria-valuemin="0" aria-valuemax="100" style="width: {{status.progress}}%;">
+				</div>
+			</div>
+
+		</div>
+
+		<div class="container">
 			<div ng-view=""></div>
 		</div>
 
 		<div class="footer">
 			<div class="container">
-				<p><span class="glyphicon glyphicon-copyright-mark"></span> Tom Curran</p>
+				<p><span class="glyphicon glyphicon-copyright-mark"></span> Tom Curran 2016</p>
 			</div>
 		</div>
 
@@ -118,6 +137,8 @@
 		<script src="scripts/routes.js"></script>
 <script src="scripts/directives/player.js"></script>
 <script src="scripts/controllers/catalogue.js"></script>
+<script src="scripts/controllers/about.js"></script>
+<script src="scripts/services/vote.js"></script>
 		<!-- endbuild -->
 	</body>
 </html>
