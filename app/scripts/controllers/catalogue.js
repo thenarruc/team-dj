@@ -19,7 +19,7 @@ angular.module('teamDjApp')
     	console.log(b);
 	    $scope.test1 = $firebaseObject(a);
 	    $scope.test2 = $firebaseArray(b);
-	    $scope.catalogue = $firebaseArray(Ref.child($scope.catalogueName + '/catalogue').orderByChild('score'));
+	    $scope.catalogue = $firebaseArray(Ref.child($scope.catalogueName + '/catalogue').orderByChild('score')).reverse();
 	    $scope.votes = $firebaseObject(Ref.child($scope.catalogueName + '/votes/' + user.uid));
     };
     $scope.newCatalogueName = $scope.catalogueName;

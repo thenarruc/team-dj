@@ -232,8 +232,8 @@ angular.module('teamDjApp')
     }
 
     function ping() {
-      if(hasControl()) {
-        $timeout(setStatus, 10000);
+      if(hasControl() && $rootScope.status.state === "playing") {
+        $timeout(setStatus, 1000);
       }
     }
 
